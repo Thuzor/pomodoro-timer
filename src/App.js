@@ -1,22 +1,66 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import './App.css';
 
+import padTime from "./helpers/padTime";
+
 export default function App() {
-  return (
-    <div className="app">
-      <h2>Pomodoro!</h2>
 
-      <div className="timer">
-        <span>00</span>
-        <span>:</span>
-        <span>00</span>
-      </div>
+    const [title] = useState('Let the countdown begin');
+    const [timeLeft, setTimeLeft] = useState(25 * 60);
+    const [isRunning, setIsRunning] = useState(false);
 
-      <div className="buttons">
-        <button>Start</button>
-        <button>Stop</button>
-        <button>Reset</button>
-      </div>
-    </div>
-  );
+    const intervalRef = useRef(null);
+
+    const startTimer = () => {
+        if(intervalRef.current !== null) return;
+
+        setIsRunning(true);
+        intervalRef.current = setInterval(() => {
+            setTimeLeft(timeLeft => {
+                if(timeLeft >= 1) {
+                    return timeLeft -1;
+                }
+
+                resetTimer();
+                return 0;
+            });
+        }, 1000)
+
+    }
+
+    const stopTimer = () => {
+        if(intervalRef.current === null) return;
+
+        clearInterval(intervalRef.current);
+        intervalRef.current = null
+        setIsRunning(false);
+    }
+
+    const resetTimer = () => {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null
+        setTimeLeft(25 * 60);
+        setIsRunning(false);
+    }
+
+    const minutes = padTime(Math.floor(timeLeft / 60));
+    const seconds = padTime(timeLeft - minutes * 60);
+
+    return (
+        <div className="app">
+            <h2>{ title }</h2>
+
+            <div className="timer">
+                <span>{ minutes }</span>
+                <span>:</span>
+                <span>{ seconds }</span>
+            </div>
+
+            <div className="buttons">
+                {!isRunning && <button onClick={startTimer}>Start</button>}
+                {isRunning && <button onClick={stopTimer}>Stop</button> }
+                <button onClick={resetTimer}>Reset</button>
+            </div>
+        </div>
+    );
 }
